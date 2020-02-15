@@ -1,27 +1,27 @@
 package main
 
 import (
-	"fmt"
-	"github.com/go-kit/kit/log/level"
-	"os"
 	"net/http"
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-kit/kit/log/level"
+	_ "github.com/heroku/x/hmetrics/onload"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/promlog"
+	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
-	"github.com/gin-gonic/gin"
-	"gopkg.in/alecthomas/kingpin.v2"
-	_ "github.com/heroku/x/hmetrics/onload"
 	lm "github.com/quiet-listener/latency_exporter/latencymetrics"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func main() {
 	var (
-		port = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default("9101").String()
+		port        = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default("9101").String()
 		metricsPath = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
-		urls = kingpin.Flag("web.urls-list","List of urls to for Metrics expose").Required().String()
-		delimiter = kingpin.Flag("web.url-delimiter","Delimiter used to split url").Default(",").String()
+		urls        = kingpin.Flag("web.urls-list", "List of urls to for Metrics expose").Required().String()
+		delimiter   = kingpin.Flag("web.url-delimiter", "Delimiter used to split url").Default(",").String()
 	)
 	promlogConfig := &promlog.Config{}
 	flag.AddFlags(kingpin.CommandLine, promlogConfig)
@@ -30,7 +30,7 @@ func main() {
 	logger := promlog.New(promlogConfig)
 	level.Info(logger).Log("msg", "Starting latency_metrics_exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "context", version.BuildContext())
-	exporter, err := lm.NewExporter(*urls,*delimiter, logger)
+	exporter, err := lm.NewExporter(*urls, *delimiter, logger)
 	if err != nil {
 		level.Error(logger).Log("msg", "Error creating an exporter", "err", err)
 		os.Exit(1)
@@ -48,16 +48,11 @@ func main() {
 		level.Error(logger).Log("msg", "Error starting HTTP server", "err", err)
 		os.Exit(1)
 	}
-	url := "https://www.google.com"
-	um:= lm.NewLatencyMetricObject(url)
-	um.TimeLatency()
-	fmt.Println(um)
 }
 
 func startPage(c *gin.Context) {
-		c.HTML(http.StatusOK, "startPage.tmpl", gin.H{
-			"title": "Latency Exporter",
-			"metric_path": "/metrics",
-		})
+	c.HTML(http.StatusOK, "startPage.tmpl", gin.H{
+		"title":       "Latency Exporter",
+		"metric_path": "/metrics",
+	})
 }
-	
