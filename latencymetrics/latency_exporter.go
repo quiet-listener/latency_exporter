@@ -24,11 +24,11 @@ var (
 
 type Exporter struct {
 	mutex sync.RWMutex
-	dnslatency	*prometheus.HistogramVec
-	connectlatency *prometheus.HistogramVec
-	sslshake *prometheus.HistogramVec
-	ttfb *prometheus.HistogramVec
-	rtt *prometheus.HistogramVec
+	dnslatency	prometheus.Histogram
+	connectlatency prometheus.Histogram
+	sslshake prometheus.Histogram
+	ttfb prometheus.Histogram
+	rtt prometheus.Histogram
 	logger log.Logger
 }
 
@@ -51,31 +51,31 @@ func NewExporter(urlsstr string, delimiter string, logger log.Logger) (*Exporter
 		urlm=append(urlm, NewLatencyMetricObject(url))
 	}
 	return &Exporter{
-		dnslatency : prometheus.NewHistogramVec( prometheus.HistogramOpts {
+		dnslatency : prometheus.NewHistogram( prometheus.HistogramOpts {
 			Namespace : namespace,
 			Name : "dns_latency",
 			Help :  "Time taken for DNS resolution to complete.",
-		}, url_label),
-		connectlatency : prometheus.NewHistogramVec( prometheus.HistogramOpts {
+		}),
+		connectlatency : prometheus.NewHistogram( prometheus.HistogramOpts {
 			Namespace : namespace,
 			Name : "connect_latency",
 			Help :  "Time taken for TCP connection to complete.",
-		}, url_label ),
-		sslshake : prometheus.NewHistogramVec( prometheus.HistogramOpts {
+		}),
+		sslshake : prometheus.NewHistogram( prometheus.HistogramOpts {
 			Namespace : namespace,
 			Name : "sslshake_latency",
 			Help :  "Time taken for SSL handshake to complete.",
-		}, url_label ),
-		ttfb : prometheus.NewHistogramVec( prometheus.HistogramOpts {
+		}),
+		ttfb : prometheus.NewHistogram( prometheus.HistogramOpts {
 			Namespace : namespace,
 			Name : "ttfb_latency",
 			Help :  "Time taken till the first byte recieved.",
-		}, url_label ),
-		rtt : prometheus.NewHistogramVec( prometheus.HistogramOpts {
+		}),
+		rtt : prometheus.NewHistogram( prometheus.HistogramOpts {
 			Namespace : namespace,
 			Name : "rtt_latency",
 			Help :  "RTT to complete.",
-		}, url_label),
+		}),
 		logger: logger,
 	}, nil
 }
