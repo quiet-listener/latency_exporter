@@ -1,14 +1,13 @@
-ARG ARCH="amd64"
-ARG OS="linux"
-FROM quay.io/prometheus/busybox:latest
+FROM alpine:latest
 LABEL maintainer="quiet-listener"
 
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG url-list
-COPY ${GOBIN}/latency_exporter /bin/latency_exporter
+RUN apk update && apk add go git
+COPY ./ /root/go/src/github.com/quiet-listener/latency_exporter
+WORKDIR /root/go/src/github.com/quiet-listener/latency_exporter
+RUN go get -d ./ && go build && go install && cp /root/go/bin/latency_exporter /bin/
+RUN apk del go git 
 ENV GIN_MODE="release"
-RUN test -n "$url-list"
-
-ENTRYPOINT ["/bin/latency_exporter","--web.urls-list",url-list]
+ENTRYPOINT ["/bin/latency_exporter"]
 EXPOSE     9101
