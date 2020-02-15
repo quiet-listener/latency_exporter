@@ -20,7 +20,7 @@ func main() {
 	var (
 		port = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default("9101").String()
 		metricsPath = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
-		urls = kingpin.Flag("web.urls-list","List of urls to for Metrics expose").Required().String()
+		urls = kingpin.Flag("web.urls-list","List of urls to for Metrics expose").Default("https://www.google.com,https://news.google.com/?hl=en-IN&gl=IN&ceid=IN:en").String()
 		delimiter = kingpin.Flag("web.url-delimiter","Delimiter used to split url").Default(",").String()
 	)
 	promlogConfig := &promlog.Config{}
@@ -30,7 +30,7 @@ func main() {
 	logger := promlog.New(promlogConfig)
 	level.Info(logger).Log("msg", "Starting latency_metrics_exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "context", version.BuildContext())
-	exporter, err := lm.NewExporter(*urls,*delimiter logger)
+	exporter, err := lm.NewExporter(*urls,*delimiter, logger)
 	if err != nil {
 		level.Error(logger).Log("msg", "Error creating an exporter", "err", err)
 		os.Exit(1)
@@ -41,7 +41,7 @@ func main() {
 	router.LoadHTMLGlob("templates/*")
 	router.StaticFile("/favicon.ico", "statics/favicon.ico")
 	router.Use(gin.Logger())
-	router.GET(*metricsPath, gin.Wrap(promhttp.Handler()))
+	router.GET(*metricsPath, gin.WrapH(promhttp.Handler()))
 	router.GET("/", startPage)
 	level.Info(logger).Log("msg", "Listening on port", "port", *port)
 	if err := router.Run(":" + *port); err != nil {
