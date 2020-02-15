@@ -1,4 +1,4 @@
-package latency_metrics
+package latencymetrics
 
 import (
 	"crypto/tls"
@@ -13,8 +13,8 @@ type latencyMetric interface {
 	TimeLatency()
 }
 
-//UrlMetric struct for urlmetric
-type UrlMetric struct {
+//URLMetric struct for urlmetric
+type URLMetric struct {
 	url      string
 	dns      time.Duration
 	connect  time.Duration
@@ -23,16 +23,17 @@ type UrlMetric struct {
 	rtt      time.Duration
 }
 
-// NewLatencyMetricObject Creates UrlMetric Object and returns
-func NewLatencyMetricObject(url string) *UrlMetric {
-	return &UrlMetric{url: url}
+// NewLatencyMetricObject Creates URLMetric Object and returns
+func NewLatencyMetricObject(url string) *URLMetric {
+	return &URLMetric{url: url}
 }
 
-func (um *UrlMetric) String() string {
+func (um *URLMetric) String() string {
 	return fmt.Sprintf("url: %s\nDns: %v\nConnect: %v\nSSL Handshake : %v\nTTFB : %v\nRTT: %v",um.url,um.dns,um.connect,um.sslshake,um.ttfb,um.rtt)
 }
 
-func (um *UrlMetric) TimeLatency() {
+// TimeLatency collects latency metrics and updats URLMetric
+func (um *URLMetric) TimeLatency() {
 	var start , dns, connect, sslshake time.Time
 	req, err := http.NewRequest("GET", um.url, nil)
 	if err != nil {
