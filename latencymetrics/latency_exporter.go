@@ -5,6 +5,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"strings"
 	"sync"
+	"time"
 	urlparse "net/url"
 )
 const (
@@ -86,10 +87,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		go url.TimeLatency()
 	}
 	for _, url := range urlm {
-		ch <- prometheus.MustNewConstMetric(dns_desc, prometheus.GaugeValue, float64(url.dns),url.url)
-		ch <- prometheus.MustNewConstMetric(connect_desc, prometheus.GaugeValue,float64(url.connect),url.url)
-		ch <- prometheus.MustNewConstMetric(ssl_desc, prometheus.GaugeValue,float64(url.sslshake),url.url)
-		ch <- prometheus.MustNewConstMetric(ttfb_desc, prometheus.GaugeValue,float64(url.ttfb),url.url)
-		ch <- prometheus.MustNewConstMetric(rtt_desc, prometheus.GaugeValue,float64(url.rtt),url.url)
+		ch <- prometheus.MustNewConstMetric(dns_desc, prometheus.GaugeValue, (float64(url.dns)/float64(time.Millisecond)),url.url)
+		ch <- prometheus.MustNewConstMetric(connect_desc, prometheus.GaugeValue,(float64(url.connect)/float64(time.Millisecond)),url.url)
+		ch <- prometheus.MustNewConstMetric(ssl_desc, prometheus.GaugeValue,(float64(url.sslshake)/float64(time.Millisecond)),url.url)
+		ch <- prometheus.MustNewConstMetric(ttfb_desc, prometheus.GaugeValue,(float64(url.ttfb)/float64(time.Millisecond)),url.url)
+		ch <- prometheus.MustNewConstMetric(rtt_desc, prometheus.GaugeValue,(float64(url.rtt)/float64(time.Millisecond)),url.url)
 	}
 }
