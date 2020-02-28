@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"net"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 )
 
 type latencyMetric interface {
@@ -50,7 +51,7 @@ func (um *URLMetric) String() string {
 // TimeLatency collects latency metrics and updats URLMetric
 func (um *URLMetric) TimeLatency(e *Exporter) error {
 	var start, dns, connect, sslshake time.Time
-	um.dns = time.Duration(0 * time.Millisecond)
+	um.dns = time.Duration(0 * time.Second)
 	req, err := http.NewRequest("GET", um.url, nil)
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Error Creating New Request", "err", err)
@@ -68,7 +69,7 @@ func (um *URLMetric) TimeLatency(e *Exporter) error {
 		TLSHandshakeDone: func(cs tls.ConnectionState, err error) {
 			if err != nil {
 				level.Error(e.logger).Log("msg", "Error TLS Handshake", "err", err)
-				um.sslshake = time.Duration(0 * time.Millisecond)
+				um.sslshake = time.Duration(0 * time.Second)
 			}
 			um.sslshake = time.Since(sslshake)
 		},
@@ -78,7 +79,7 @@ func (um *URLMetric) TimeLatency(e *Exporter) error {
 		ConnectDone: func(network, addr string, err error) {
 			if err != nil {
 				level.Error(e.logger).Log("msg", "Error Conection Time", "err", err)
-				um.connect = time.Duration(0 * time.Millisecond)
+				um.connect = time.Duration(0 * time.Second)
 			}
 			um.connect = time.Since(connect)
 		},
@@ -92,6 +93,7 @@ func (um *URLMetric) TimeLatency(e *Exporter) error {
 	req = req.WithContext(ctx)
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	start = time.Now()
+	// customTransport can be updated for differrent Values as per requirement
 	var customTransport http.RoundTripper = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
