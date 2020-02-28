@@ -30,7 +30,7 @@ func main() {
 	logger := promlog.New(promlogConfig)
 	version.Branch = "master"
 	version.Version = "v1"
-	version.Revision = "2"
+	version.Revision = "1"
 	level.Info(logger).Log("msg", "Starting latency_metrics_exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "context", version.BuildContext())
 	exporter, err := lm.NewExporter(*urls, *delimiter, logger)

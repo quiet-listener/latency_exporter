@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	namespace = "latency"     // For Prometheus metrics.
-	subsystem = "url_metrics" // For Prometheus metrics
+	namespace = "latency_exporter" // For Prometheus metrics.
+	subsystem = "url_metrics"      // For Prometheus metrics
 )
 
 var (
@@ -21,6 +21,7 @@ var (
 	urlm     []*URLMetric
 )
 
+// Exporter struc for the latency Exporter
 type Exporter struct {
 	mutex          sync.RWMutex
 	dnslatency     *prometheus.HistogramVec
@@ -41,9 +42,10 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.rtt.Describe(ch)
 }
 
+// NewExporter creates urlm objects and return exporter
 func NewExporter(urlsstr string, delimiter string, logger log.Logger) (*Exporter, error) {
-	url_loop := strings.Split(urlsstr, delimiter)
-	for _, url := range url_loop {
+	urlLoop := strings.Split(urlsstr, delimiter)
+	for _, url := range urlLoop {
 		if _, err := urlparse.Parse(url); err != nil {
 			return nil, err
 		}
@@ -52,39 +54,39 @@ func NewExporter(urlsstr string, delimiter string, logger log.Logger) (*Exporter
 	return &Exporter{
 		dnslatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: namespace,
-			Name:      "dns_latency",
+			Name:      "dns_latency_sec",
 			Subsystem: "url_metric",
-			Help:      "Time taken for DNS resolution to complete.",
-			Buckets:   prometheus.LinearBuckets(0, 10, 100),
+			Help:      "Time taken for DNS resolution to complete in Seconds",
 		}, urlLabel),
 		connectlatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: namespace,
-			Name:      "connect_latency",
-			Help:      "Time taken for TCP connection to complete.",
-			Buckets:   prometheus.LinearBuckets(0, 10, 100),
+			Name:      "connect_latency_sec",
+			Subsystem: "url_metric",
+			Help:      "Time taken for TCP connection to complete in Seconds",
 		}, urlLabel),
 		sslshake: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: namespace,
-			Name:      "sslshake_latency",
-			Help:      "Time taken for SSL handshake to complete.",
-			Buckets:   prometheus.LinearBuckets(0, 20, 50),
+			Name:      "sslshake_latency_sec",
+			Subsystem: "url_metric",
+			Help:      "Time taken for SSL handshake to complete in Seconds",
 		}, urlLabel),
 		ttfb: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: namespace,
-			Name:      "ttfb_latency",
-			Help:      "Time taken till the first byte recieved.",
-			Buckets:   prometheus.LinearBuckets(0, 20, 50),
+			Name:      "ttfb_latency_sec",
+			Subsystem: "url_metric",
+			Help:      "Time taken till the first byte recieved in Seconds",
 		}, urlLabel),
 		rtt: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: namespace,
-			Name:      "rtt_latency",
-			Help:      "RTT to complete.",
-			Buckets:   prometheus.LinearBuckets(0, 20, 50),
+			Name:      "rtt_latency_sec",
+			Subsystem: "url_metric",
+			Help:      "RTT to complete in Seconds",
 		}, urlLabel),
 		logger: logger,
 	}, nil
 }
 
+// Collect implementation for prometheus exporter
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
@@ -106,9 +108,9 @@ func (e *Exporter) scrape(url *URLMetric, ch chan<- prometheus.Metric, wg *sync.
 	if err := url.TimeLatency(e); err != nil {
 		level.Error(e.logger).Log("msg", "Error starting HTTP server", "err", err)
 	}
-	e.dnslatency.WithLabelValues(url.url).Observe((float64(url.dns) / float64(time.Millisecond)))
-	e.connectlatency.WithLabelValues(url.url).Observe((float64(url.connect) / float64(time.Millisecond)))
-	e.sslshake.WithLabelValues(url.url).Observe((float64(url.sslshake) / float64(time.Millisecond)))
-	e.ttfb.WithLabelValues(url.url).Observe((float64(url.ttfb) / float64(time.Millisecond)))
-	e.rtt.WithLabelValues(url.url).Observe((float64(url.rtt) / float64(time.Millisecond)))
+	e.dnslatency.WithLabelValues(url.url).Observe((float64(url.dns) / float64(time.Second)))
+	e.connectlatency.WithLabelValues(url.url).Observe((float64(url.connect) / float64(time.Second)))
+	e.sslshake.WithLabelValues(url.url).Observe((float64(url.sslshake) / float64(time.Second)))
+	e.ttfb.WithLabelValues(url.url).Observe((float64(url.ttfb) / float64(time.Second)))
+	e.rtt.WithLabelValues(url.url).Observe((float64(url.rtt) / float64(time.Second)))
 }
