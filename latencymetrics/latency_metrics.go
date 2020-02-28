@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"net"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -49,6 +50,7 @@ func (um *URLMetric) String() string {
 // TimeLatency collects latency metrics and updats URLMetric
 func (um *URLMetric) TimeLatency(e *Exporter) error {
 	var start, dns, connect, sslshake time.Time
+	um.dns = time.Duration(0 * time.Millisecond)
 	req, err := http.NewRequest("GET", um.url, nil)
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Error Creating New Request", "err", err)
@@ -90,7 +92,21 @@ func (um *URLMetric) TimeLatency(e *Exporter) error {
 	req = req.WithContext(ctx)
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	start = time.Now()
-	if _, err := http.DefaultTransport.RoundTrip(req); err != nil {
+	var customTransport http.RoundTripper = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   2 * time.Second,
+			KeepAlive: 2 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		DisableKeepAlives:     true,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          5,
+		IdleConnTimeout:       5 * time.Second,
+		TLSHandshakeTimeout:   1 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	if _, err := customTransport.RoundTrip(req); err != nil {
 		level.Error(e.logger).Log("msg", "Error Completeing RTTs", req.URL, "err", err)
 		return err
 	}
