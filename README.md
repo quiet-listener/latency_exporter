@@ -6,7 +6,7 @@ Latency exporter can be used to collect url connection latency metric from the b
 There are various ways of installing
 
 ### Docker images
-Docker images are available on [dockerhub] (https://hub.docker.com/r/eyeker/latency_exporter)
+Docker images are available on [dockerhub](https://hub.docker.com/r/eyeker/latency_exporter)
 ```
 docker run -p9101:9101 eyeker/latency_exporter --web.urls-list https://google.com,https://www.facebook.com
 ```
