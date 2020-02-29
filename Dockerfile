@@ -1,5 +1,5 @@
 FROM golang:alpine AS build_base
-RUN apk add --no-cache git ca-certificates && update-ca-certificates
+RUN apk add --no-cache git ca-certificates
 ENV USER=promuser
 ENV UID=10001
 RUN adduser \
@@ -12,12 +12,11 @@ RUN adduser \
     "${USER}"
 WORKDIR /tmp/latency_exporter
 COPY go.mod .
-COPY go.sum .
 RUN go mod download
-RUN go mod verify
 COPY . .
 ARG GOOS=linux
 ARG GOARCH=amd64
+ARG CGO_ENABLED=0
 RUN go build -ldflags="-w -s" -o ./out/latency_exporter
 
 FROM scratch
