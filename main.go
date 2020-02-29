@@ -17,7 +17,7 @@ import (
 
 func main() {
 	var (
-		port        = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default("9101").String()
+		port        = kingpin.Flag("web.listen-port", "Port to listen on for web interface and telemetry.").Default("9101").String()
 		metricsPath = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 		urls        = kingpin.Flag("web.urls-list", "List of urls to for Metrics expose").Required().String()
 		delimiter   = kingpin.Flag("web.url-delimiter", "Delimiter used to split url").Default(",").String()
@@ -55,6 +55,6 @@ func main() {
 func startPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "startPage.tmpl", gin.H{
 		"title":       "Latency Exporter",
-		"metric_path": "/metrics",
+		"metric_path": *metricsPath,
 	})
 }
